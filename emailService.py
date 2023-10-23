@@ -15,10 +15,8 @@ class EmailServiceSettings:
     server: str
     port: int
 
-    def __init__(
-        self, username: str, password: str, server: str, port: int, dev_mode: int = 0
-    ):
-        self.dev_mode = True if dev_mode == 1 else False
+    def __init__(self, username: str, password: str, server: str, port: int, dev_mode: bool = False) -> None:
+        self.dev_mode = dev_mode
         self.username = username
         self.password = password
         self.server = server
@@ -43,7 +41,7 @@ class EmailService:
     _bcc_recipients: set[str]
     _attachments: set[tuple[Path, str]]
 
-    def __init__(self, settings: EmailServiceSettings):
+    def __init__(self, settings: EmailServiceSettings) -> None:
         self.dev_mode = settings.dev_mode
         self.username = settings.username
         self.password = settings.password
@@ -52,6 +50,7 @@ class EmailService:
 
         self._subject = ""
         self._msg_body = MIMEText("")
+        self._original_msg_body = MIMEText("")
         self._original_sender = settings.username
         self._reply_to = settings.username
         self._from = settings.username
@@ -85,6 +84,7 @@ class EmailService:
         self,
         body: str,
     ) -> "EmailService":
+        self._original_msg_body = body
         self._msg_body = MIMEText(body)
         self._msg_body.set_type("text/html")
         self._msg_body.set_param("charset", "UTF-8")
@@ -169,6 +169,9 @@ class EmailService:
             print("printing email:")
             print(self)
             print()
+            print("Original message:")
+            print(self._original_msg_body)
+            print()
             return True
 
         try:
@@ -190,6 +193,9 @@ class EmailService:
             print()
             print("printing email after sending:")
             print(self)
+            print()
+            print("Original message:")
+            print(self._original_msg_body)
             print()
 
         return True
