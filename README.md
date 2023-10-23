@@ -20,8 +20,11 @@ email_service_settings = EmailServiceSettings(
     password="your_email_password",
     server="your_email_server",
     port=your_email_port
+    dev_mode=True  # Activate development mode
 )
 ```
+
+If `dev_mode` is set to True, the e-mail will be printed at the console instead of actually being sent. This is useful for checking the contents of the e-mail without actually sending it. For production use, you can set dev_mode to False.
 
 3. Create an `EmailService` instance: Instantiate the `EmailService` class with your email service settings:
 
@@ -47,11 +50,11 @@ email_service.send()
 
 ## Debugging Mode
 
-You can enable debugging mode by setting `debug=True` when calling the `send()` method. In this mode, the email content will be printed to the console instead of sending it.
+You can activate debug mode by setting `debug=True` when calling the `send()` method. In this mode, the contents of the email will be sent and printed on the console.
 
 **Note**: Ensure you have the required SMTP server information, such as the server address, port, email credentials, and recipient email addresses, correctly configured in your `EmailServiceSettings` instance.
 
-This `EmailService` class offers a convenient and well-organized way to manage your email communications within your Flask application.
+This `EmailService` class offers a convenient and well-organized way to manage your email communications within a Flask application.
 
 ## Attribution
 
