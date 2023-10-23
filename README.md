@@ -9,13 +9,13 @@ To use the `EmailService` class, follow these steps:
 1. Import the `EmailService` class: You need to import the EmailService class in your
 
 ```py
-from email_service import EmailService, EmailServiceSettings
+from emailService import EmailService, EmailServiceSettings
 ```
 
 2. Set up your email service settings: Create an `EmailServiceSettings` instance with the necessary parameters. Here's an example:
 
 ```py
-email_service_settings = EmailServiceSettings(
+emailServiceSettings = EmailServiceSettings(
     username="your_email@example.com",
     password="your_email_password",
     server="your_email_server",
@@ -29,23 +29,23 @@ If `dev_mode` is set to True, the e-mail will be printed at the console instead 
 3. Create an `EmailService` instance: Instantiate the `EmailService` class with your email service settings:
 
 ```py
-email_service = EmailService(email_service_settings)
+emailService = EmailService(email_service_settings)
 ```
 4. Specify email details: Customize your email by specifying the subject, email body (in HTML format), recipients, CC recipients, BCC recipients, and attachments. For example:
 
 ```py
-email_service.subject("Subject of your email")
-email_service.body("HTML-formatted email content")
-email_service.recipients(["recipient1@example.com", "recipient2@example.com"])
-email_service.cc_recipients(["cc_recipient@example.com"])
-email_service.bcc_recipients(["bcc_recipient@example.com"])
-email_service.attach_files(["attachment1.txt", "attachment2.pdf"])
+emailService.subject("Subject of your email")
+emailService.body("HTML-formatted email content")
+emailService.recipients(["recipient1@example.com", "recipient2@example.com"])
+emailService.cc_recipients(["cc_recipient@example.com"])
+emailService.bcc_recipients(["bcc_recipient@example.com"])
+emailService.attach_files(["attachment1.txt", "attachment2.pdf"])
 ```
 
 5. Send the email: Finally, use the send() method to send your email:
 
 ```py
-email_service.send()
+emailService.send()
 ```
 
 ## Debugging Mode
