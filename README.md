@@ -29,7 +29,7 @@ If `dev_mode` is set to True, the e-mail will be printed at the console instead 
 3. Create an `EmailService` instance: Instantiate the `EmailService` class with your email service settings:
 
 ```py
-emailService = EmailService(email_service_settings)
+emailService = EmailService(emailServiceSettings)
 ```
 4. Specify email details: Customize your email by specifying the subject, email body (in HTML format), recipients, CC recipients, BCC recipients, and attachments. For example:
 
