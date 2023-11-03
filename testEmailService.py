@@ -2,6 +2,7 @@ import unittest
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
+
 from emailService import EmailService, EmailServiceSettings
 
 
