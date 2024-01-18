@@ -6,7 +6,7 @@ from pathlib import Path
 from smtplib import SMTP
 from smtplib import SMTPException
 from ssl import create_default_context
-from typing import Optional
+from typing import Optional, Union
 
 from mailparser import MailParser, parse_from_bytes
 
@@ -22,14 +22,33 @@ class EmailServiceSettings:
         username: str,
         password: str,
         server: str,
-        port: int,
-        dev_mode: bool = False,
+        port: Union[int, str],
+        dev_mode: Union[int, str, bool],
     ) -> None:
-        self.dev_mode = dev_mode
+        """
+                Dev_mode will prevent the email from being sent. It will print the email instead.
+
+                Dev_mode: 1, "1", True, "True", "true" will set dev_mode to True, else False
+
+                :param dev_mode:
+                :param username:
+                :param password:
+                :param server:
+                :param port:
+                """
+        truly = [1, "1", True, "True", "true"]
+        self.dev_mode = True if dev_mode in truly else False
         self.username = username
         self.password = password
         self.server = server
-        self.port = port
+
+        if isinstance(port, int):
+            self.port = port
+        else:
+            try:
+                self.port = int(port)
+            except ValueError:
+                raise ValueError("Port must be an integer or string-int.")
 
 
 class IMAPEmailService:
@@ -87,7 +106,7 @@ class IMAPEmailService:
         raise ConnectionError("IMAP connection not established. Use with statement.")
 
     def __repr__(self) -> str:
-        return f"<Class: EmailService>" f"\n{self.parsed_emails}\n"
+        return f"<Class: IMAPEmailService>" f"\n{self.parsed_emails}\n"
 
 
 class SMTPEmailService:
@@ -262,12 +281,15 @@ class SMTPEmailService:
 
 # usage:
 """
-email_service_settings = SMTPEmailServiceSettings(
+email_service_settings = EmailServiceSettings(
     username="test0@test.com",
     password="none",
     server="none.none.none",
     port=000
 )
+
+
+# SMTP Service
 
 email_service = SMTPEmailService(
     email_service_settings
@@ -303,4 +325,59 @@ email_service.attach_files(
 )
 
 email_service.send()
+
+
+# IMAP Service
+
+with IMAPEmailService(email_service_settings) as service:
+    inbox = service.get_inbox()
+    
+    for inbox_email in inbox:
+        email_id, email = inbox_email
+        print(email_id, email.text_plain)
+        print("-" * 80)
+
+
+# IMAP Service - Mark as read
+
+with IMAPEmailService(email_service_settings) as service:
+    inbox = service.get_inbox()
+    
+    for inbox_email in inbox:
+        email_id, email = inbox_email
+        print(email_id, email.text_plain)
+        print("-" * 80)
+        
+        service.store(email_id, "+FLAGS", "\\Seen")
+
+
+## email.<option>
+
+email.attachments: list of all attachments
+email.body
+email.date: datetime object in UTC
+email.defects: defect RFC not compliance
+email.defects_categories: only defects categories
+email.delivered_to
+email.from_
+email.get_server_ipaddress(trust="my_server_mail_trust")
+email.headers
+email.mail: tokenized mail in a object
+email.message: email.message.Message object
+email.message_as_string: message as string
+email.message_id
+email.received
+email.subject
+email.text_plain: only text plain mail parts in a list
+email.text_html: only text html mail parts in a list
+email.text_not_managed: all not managed text (check the warning logs to find content subtype)
+email.to
+email.to_domains
+email.timezone: returns the timezone, offset from UTC
+email.mail_partial: returns only the mains parts of emails
+
+~~ Save attachments
+
+email.write_attachments(base_path)
+
 """
