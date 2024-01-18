@@ -8,13 +8,20 @@ from ssl import create_default_context
 from typing import Optional
 
 
-class EmailServiceSettings:
+class SMTPEmailServiceSettings:
     username: str
     password: str
     server: str
     port: int
 
-    def __init__(self, username: str, password: str, server: str, port: int, dev_mode: bool = False) -> None:
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        server: str,
+        port: int,
+        dev_mode: bool = False,
+    ) -> None:
         self.dev_mode = dev_mode
         self.username = username
         self.password = password
@@ -22,12 +29,8 @@ class EmailServiceSettings:
         self.port = port
 
 
-class EmailService:
-    dev_mode: bool
-    username: str
-    password: str
-    server: str
-    port: int
+class SMTPEmailService:
+    settings: SMTPEmailServiceSettings
 
     _subject: str
     _msg: Optional[MIMEMultipart]
@@ -40,12 +43,8 @@ class EmailService:
     _bcc_recipients: set[str]
     _attachments: set[tuple[Path, str]]
 
-    def __init__(self, settings: EmailServiceSettings) -> None:
-        self.dev_mode = settings.dev_mode
-        self.username = settings.username
-        self.password = settings.password
-        self.server = settings.server
-        self.port = settings.port
+    def __init__(self, settings: SMTPEmailServiceSettings) -> None:
+        self.settings = settings
 
         self._subject = ""
         self._msg_body = MIMEText("")
@@ -66,7 +65,7 @@ class EmailService:
             [f"{file} - {status}" for file, status in self._attachments]
         )
         return (
-            f"<Class: EmailService>"
+            f"<Class: SMTPEmailService>"
             f"\n{self._msg}\n"
             "Files set for attachment:\n"
             f"{attachments}"
@@ -75,14 +74,14 @@ class EmailService:
     def subject(
         self,
         subject: str,
-    ) -> "EmailService":
+    ) -> "SMTPEmailService":
         self._subject = subject
         return self
 
     def body(
         self,
         body: str,
-    ) -> "EmailService":
+    ) -> "SMTPEmailService":
         self._original_msg_body = body
         self._msg_body = MIMEText(body)
         self._msg_body.set_type("text/html")
@@ -90,15 +89,15 @@ class EmailService:
         self._msg.attach(self._msg_body)
         return self
 
-    def reply_to(self, reply_to: str) -> "EmailService":
+    def reply_to(self, reply_to: str) -> "SMTPEmailService":
         self._msg.replace_header("Reply-To", reply_to)
         return self
 
-    def from_(self, from_: str) -> "EmailService":
+    def from_(self, from_: str) -> "SMTPEmailService":
         self._from = from_
         return self
 
-    def recipients(self, recipients: list[str]) -> "EmailService":
+    def recipients(self, recipients: list[str]) -> "SMTPEmailService":
         self._recipients.update(set(recipients))
         if "To" in self._msg:
             self._msg.replace_header("To", ", ".join(self._recipients))
@@ -107,7 +106,7 @@ class EmailService:
         self._msg.add_header("To", ", ".join(self._recipients))
         return self
 
-    def cc_recipients(self, cc_recipients: list[str]) -> "EmailService":
+    def cc_recipients(self, cc_recipients: list[str]) -> "SMTPEmailService":
         self._cc_recipients.update(set(cc_recipients))
         if "CC" in self._msg:
             self._msg.replace_header("CC", ", ".join(self._cc_recipients))
@@ -116,7 +115,7 @@ class EmailService:
         self._msg.add_header("CC", ", ".join(self._cc_recipients))
         return self
 
-    def bcc_recipients(self, bcc_recipients: list[str]) -> "EmailService":
+    def bcc_recipients(self, bcc_recipients: list[str]) -> "SMTPEmailService":
         self._bcc_recipients.update(set(bcc_recipients))
         if "BCC" in self._msg:
             self._msg.replace_header("BCC", ", ".join(self._bcc_recipients))
@@ -125,7 +124,7 @@ class EmailService:
         self._msg.add_header("BCC", ", ".join(self._bcc_recipients))
         return self
 
-    def attach_files(self, files: list[str | Path]) -> "EmailService":
+    def attach_files(self, files: list[str | Path]) -> "SMTPEmailService":
         for file in files:
             if isinstance(file, Path):
                 filepath: Path = file
@@ -147,7 +146,7 @@ class EmailService:
 
         return self
 
-    def attach_file(self, file: str | Path) -> "EmailService":
+    def attach_file(self, file: str | Path) -> "SMTPEmailService":
         self.attach_files([file])
         return self
 
@@ -174,11 +173,11 @@ class EmailService:
             return True
 
         try:
-            with SMTP(self.server, self.port) as connection:
+            with SMTP(self.settings.server, self.settings.port) as connection:
                 connection.starttls(context=create_default_context())
-                connection.login(self.username, self.password)
+                connection.login(self.settings.username, self.settings.password)
                 connection.sendmail(
-                    self.username,
+                    self.settings.username,
                     [*self._recipients, *self._cc_recipients, *self._bcc_recipients],
                     self._msg.as_string(),
                 )
@@ -202,14 +201,14 @@ class EmailService:
 
 # usage:
 """
-email_service_settings = EmailServiceSettings(
+email_service_settings = SMTPEmailServiceSettings(
     username="test0@test.com",
     password="none",
     server="none.none.none",
     port=000
 )
 
-email_service = EmailService(
+email_service = SMTPEmailService(
     email_service_settings
 )
 
