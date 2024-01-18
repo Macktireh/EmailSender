@@ -162,7 +162,7 @@ class SMTPEmailService:
         self._msg.add_header("From", self._from)
         self._msg.add_header("Subject", self._subject)
 
-        if self.dev_mode:
+        if self.settings.dev_mode:
             print()
             print("printing email:")
             print(self)
