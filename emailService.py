@@ -8,7 +8,7 @@ from ssl import create_default_context
 from typing import Optional
 
 
-class SMTPEmailServiceSettings:
+class EmailServiceSettings:
     username: str
     password: str
     server: str
@@ -30,7 +30,7 @@ class SMTPEmailServiceSettings:
 
 
 class SMTPEmailService:
-    settings: SMTPEmailServiceSettings
+    settings: EmailServiceSettings
 
     _subject: str
     _msg: Optional[MIMEMultipart]
@@ -43,7 +43,7 @@ class SMTPEmailService:
     _bcc_recipients: set[str]
     _attachments: set[tuple[Path, str]]
 
-    def __init__(self, settings: SMTPEmailServiceSettings) -> None:
+    def __init__(self, settings: EmailServiceSettings) -> None:
         self.settings = settings
 
         self._subject = ""
