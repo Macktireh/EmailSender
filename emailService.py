@@ -1,11 +1,14 @@
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from imaplib import IMAP4_SSL
 from pathlib import Path
 from smtplib import SMTP
 from smtplib import SMTPException
 from ssl import create_default_context
 from typing import Optional
+
+from mailparser import MailParser, parse_from_bytes
 
 
 class EmailServiceSettings:
@@ -27,6 +30,64 @@ class EmailServiceSettings:
         self.password = password
         self.server = server
         self.port = port
+
+
+class IMAPEmailService:
+    settings: EmailServiceSettings
+    timeout: int
+
+    connection: IMAP4_SSL = None
+    parsed_emails: list[tuple[any, MailParser]]
+
+    def __init__(self, settings: EmailServiceSettings, timeout: int = 120) -> None:
+        self.settings = settings
+        self.timeout = timeout
+        self.parsed_emails = []
+
+    def __enter__(self):
+        self.connection = IMAP4_SSL(
+            self.settings.server, self.settings.port, timeout=self.timeout
+        )
+        try:
+            self.connection.login(self.settings.username, self.settings.password)
+        except IMAP4_SSL.error:
+            raise ConnectionError("Failed to connect to IMAP server.")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.connection.state == "SELECTED":
+            self.connection.close()
+
+        self.connection.logout()
+        pass
+
+    def store(self, message_set: str, command: str, flags: str):
+        if self.connection:
+            self.connection.store(message_set, command, flags)
+            return True
+
+        raise ConnectionError("IMAP connection not established. Use with statement.")
+
+    def get_inbox(self) -> list[tuple[any, MailParser]]:
+        if self.connection:
+            self.connection.select("INBOX")
+
+            _, data = self.connection.search(None, "ALL")
+            listed = data[0].split()
+
+            for num in listed:
+                _, resp = self.connection.fetch(num, "(RFC822)")
+                if resp:
+                    raw = resp[0]
+                    if isinstance(raw, tuple):
+                        self.parsed_emails.append((num, parse_from_bytes(raw[1])))
+
+            return self.parsed_emails
+
+        raise ConnectionError("IMAP connection not established. Use with statement.")
+
+    def __repr__(self) -> str:
+        return f"<Class: EmailService>" f"\n{self.parsed_emails}\n"
 
 
 class SMTPEmailService:
