@@ -1,0 +1,5 @@
+[project]
+name = "EmailSender"
+
+[dependencies]
+mail-parser = "3.15.0"
